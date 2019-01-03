@@ -26,30 +26,30 @@ package com.sic.plugins.kpp;
 
 import com.sic.plugins.kpp.model.KPPProvisioningProfile;
 import com.sic.plugins.kpp.provider.KPPProvisioningProfilesProvider;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Hudson;
-import hudson.model.Node;
+import hudson.model.*;
 import hudson.remoting.VirtualChannel;
-import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import jenkins.model.Jenkins;
+import jenkins.tasks.SimpleBuildWrapper;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Build wrapper for provisioning profiles
  * @author Michael Bär
  */
-public class KPPProvisioningProfilesBuildWrapper extends BuildWrapper {
+public class KPPProvisioningProfilesBuildWrapper extends SimpleBuildWrapper {
     
     private List<KPPProvisioningProfile> provisioningProfiles;
     private boolean deleteProfilesAfterBuild;
@@ -93,38 +93,49 @@ public class KPPProvisioningProfilesBuildWrapper extends BuildWrapper {
     public boolean getOverwriteExistingProfiles() {
         return overwriteExistingProfiles;
     }
-    
+
+    @Override
+    public void setUp(Context context, Run<?, ?> run, FilePath filePath, Launcher launcher, TaskListener taskListener, EnvVars envVars) throws IOException, InterruptedException {
+        copyProvisioningProfiles(filePath);
+        Map<String,String> envMap = new KPPProvisioningProfilesBuildWrapper.EnvironmentImpl(provisioningProfiles).getEnvMap();
+
+        for( Map.Entry<String, String> entry : envMap.entrySet()) {
+            context.env(entry.getKey(), entry.getValue());
+        }
+    }
+
+/*
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         copyProvisioningProfiles(build);
         return new KPPProvisioningProfilesBuildWrapper.EnvironmentImpl(provisioningProfiles);
     }
-    
+*/
+
     /**
      * Copy the provisioning profiles configured for this job to the mobile provisioning profile path of the node or master, where the job is executed.
-     * @param build current build
+     * @param workspacePath path to the current build
      * @throws IOException
      * @throws InterruptedException 
      */
-    private void copyProvisioningProfiles(AbstractBuild build) throws IOException, InterruptedException {
+    private void copyProvisioningProfiles(FilePath workspacePath) throws IOException, InterruptedException {
         
-        Hudson hudson = Hudson.getInstance();
-        FilePath hudsonRoot = hudson.getRootPath();
+        Jenkins jenkins=Jenkins.getInstance();
+        FilePath jenkinsRoot = jenkins.getRootPath();
         VirtualChannel channel;
         String toProvisioningProfilesDirectoryPath = null;
         
-        String buildOn = build.getBuiltOnStr();
+        Computer buildOn= workspacePath.toComputer();
+        Computer masterComputer = jenkins.toComputer();
+
         boolean isMaster = false;
-        if (buildOn==null || buildOn.isEmpty()) {
+        channel = workspacePath.getChannel();
+        if (buildOn == masterComputer) {
             // build on master
-            FilePath projectWorkspace = build.getWorkspace();
-            channel = projectWorkspace.getChannel();
             toProvisioningProfilesDirectoryPath = KPPProvisioningProfilesProvider.getInstance().getProvisioningProfilesPath();
             isMaster = true;
         } else {
             // build on slave
-            Node node = build.getBuiltOn();
-            channel = node.getChannel();
             KPPNodeProperty nodeProperty = KPPNodeProperty.getCurrentNodeProperties();
             if (nodeProperty != null) {
                 toProvisioningProfilesDirectoryPath = KPPNodeProperty.getCurrentNodeProperties().getProvisioningProfilesPath();
@@ -154,7 +165,7 @@ public class KPPProvisioningProfilesBuildWrapper extends BuildWrapper {
         }
         
         for (KPPProvisioningProfile pp : provisioningProfiles) {
-            FilePath from = new FilePath(hudsonRoot, pp.getProvisioningProfileFilePath());
+            FilePath from = new FilePath(jenkinsRoot, pp.getProvisioningProfileFilePath());
             String toPPPath = String.format("%s%s%s", toProvisioningProfilesDirectoryPath, File.separator, KPPProvisioningProfilesProvider.getUUIDFileName(pp.getUuid()));
             FilePath to = new FilePath(channel, toPPPath);
             if (overwriteExistingProfiles || !to.exists()) {
@@ -163,7 +174,7 @@ public class KPPProvisioningProfilesBuildWrapper extends BuildWrapper {
             }
         }
     }
-    
+
     @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) super.getDescriptor();
@@ -172,6 +183,7 @@ public class KPPProvisioningProfilesBuildWrapper extends BuildWrapper {
     /**
      * Descriptor of the {@link KPPProvisioningProfilesBuildWrapper}
      */
+    @Symbol("withProvisioningProfiles")
     @Extension
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
         

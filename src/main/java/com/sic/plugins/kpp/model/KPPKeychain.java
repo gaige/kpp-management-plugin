@@ -28,10 +28,12 @@ import com.sic.plugins.kpp.Messages;
 import hudson.Extension;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
-import hudson.model.Hudson;
 import hudson.util.Secret;
 import java.io.Serializable;
 import java.util.List;
+
+import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -163,13 +165,14 @@ public final class KPPKeychain implements Describable<KPPKeychain>, Serializable
      * @return descriptor
      */
     public Descriptor getDescriptor() {
-        Descriptor ds = Hudson.getInstance().getDescriptorOrDie(getClass());
+        Descriptor ds = Jenkins.getInstance().getDescriptorOrDie(getClass());
         return ds;
     }
     
     /**
      * Descriptor of the {@link KPPKeychain}.
      */
+    @Symbol("keychain")
     @Extension
     public static final class DescriptorImpl extends Descriptor<KPPKeychain> {
 

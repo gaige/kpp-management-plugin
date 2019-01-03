@@ -26,14 +26,13 @@ package com.sic.plugins.kpp;
 
 import com.sic.plugins.kpp.model.KPPKeychain;
 import com.sic.plugins.kpp.model.KPPKeychainCertificatePair;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Hudson;
-import hudson.tasks.BuildWrapper;
+import hudson.model.*;
+import jenkins.model.Jenkins;
+import jenkins.tasks.SimpleBuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
 import java.io.File;
 import java.io.IOException;
@@ -41,13 +40,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Build wrapper for keychains
  * @author mb
  */
-public class KPPKeychainsBuildWrapper extends BuildWrapper {
+public class KPPKeychainsBuildWrapper extends SimpleBuildWrapper {
 
     private List<KPPKeychainCertificatePair> keychainCertificatePairs = new ArrayList<KPPKeychainCertificatePair>();
     private boolean deleteKeychainsAfterBuild;
@@ -91,23 +92,34 @@ public class KPPKeychainsBuildWrapper extends BuildWrapper {
         return keychainCertificatePairs;
     }
     
+/*
     @Override
     public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         copyKeychainsToWorkspace(build);
         return new EnvironmentImpl(keychainCertificatePairs);
     }
-    
+*/
+
+    @Override
+    public void setUp(Context context, Run<?, ?> run, FilePath filePath, Launcher launcher, TaskListener taskListener, EnvVars envVars) throws IOException, InterruptedException {
+        copyKeychainsToWorkspace(filePath);
+        Map<String,String> envMap = new EnvironmentImpl(keychainCertificatePairs).getEnvMap(filePath);
+
+        for( Map.Entry<String, String> entry : envMap.entrySet()) {
+            context.env(entry.getKey(), entry.getValue());
+        }
+
+    }
+
     /**
      * Copy the keychains configured for this build job to the workspace of the job.
-     * @param build the current build
+     * @param workspacePath (filepath of the destination)
      * @throws IOException
      * @throws InterruptedException 
      */
-    private void copyKeychainsToWorkspace(AbstractBuild build) throws IOException, InterruptedException {
-        FilePath projectWorkspace = build.getWorkspace();
-
-        Hudson hudson = Hudson.getInstance();
-        FilePath hudsonRoot = hudson.getRootPath();
+    private void copyKeychainsToWorkspace(FilePath workspacePath) throws IOException, InterruptedException {
+        Jenkins jenkins=Jenkins.getInstance();
+        FilePath jenkinsRoot = jenkins.getRootPath();
 
         if (copiedKeychains == null) {
             copiedKeychains = new ArrayList<FilePath>();
@@ -116,8 +128,8 @@ public class KPPKeychainsBuildWrapper extends BuildWrapper {
         }
 
         for (KPPKeychainCertificatePair pair : keychainCertificatePairs) {
-            FilePath from = new FilePath(hudsonRoot, pair.getKeychainFilePath());
-            FilePath to = new FilePath(projectWorkspace, pair.getKeychainFileName());
+            FilePath from = new FilePath(jenkinsRoot, pair.getKeychainFilePath());
+            FilePath to = new FilePath(workspacePath, pair.getKeychainFileName());
             if (overwriteExistingKeychains || !to.exists()) {
                 from.copyTo(to);
                 copiedKeychains.add(to);
@@ -131,8 +143,9 @@ public class KPPKeychainsBuildWrapper extends BuildWrapper {
     }
     
     /**
-     * Descriptor of the {@link KPPKeychainBuildWrapper}.
+     * Descriptor of the {@link KPPKeychainsBuildWrapper}.
      */
+    @Symbol("withKeychains")
     @Extension
     public static final class DescriptorImpl extends BuildWrapperDescriptor {
         
@@ -150,7 +163,7 @@ public class KPPKeychainsBuildWrapper extends BuildWrapper {
     /**
      * Environment implementation that adds additional variables to the build.
      */
-    private class EnvironmentImpl extends Environment {
+    private class EnvironmentImpl {
         
         private final List<KPPKeychainCertificatePair> keychainCertificatePairs;
         
@@ -164,10 +177,10 @@ public class KPPKeychainsBuildWrapper extends BuildWrapper {
         
         /**
          * Adds additional variables to the build environment.
-         * @param env current environment
+         * @param workspacePath current workspace
          * @return environment with additional variables
          */
-        private Map<String, String> getEnvMap(Map<String, String> env) {
+        private Map<String, String> getEnvMap(FilePath workspacePath) {
             Map<String, String> map = new HashMap<String,String>();
             for (KPPKeychainCertificatePair pair : keychainCertificatePairs) {
                 KPPKeychain keychain = KPPKeychainCertificatePair.getKeychainFromString(pair.getKeychain());
@@ -176,7 +189,7 @@ public class KPPKeychainsBuildWrapper extends BuildWrapper {
                     String password = keychain.getPassword();
                     String codeSigningIdentity = pair.getCodeSigningIdentity();
                     if (fileName!=null && fileName.length()!=0) {
-                        String keychainPath = String.format("%s%s%s", env.get("WORKSPACE"), File.separator, fileName);
+                        String keychainPath = new FilePath(workspacePath, fileName).getRemote();
                         map.put(pair.getKeychainVariableName(), keychainPath);
                     }
                     if (password!=null && password.length()!=0)
@@ -188,12 +201,6 @@ public class KPPKeychainsBuildWrapper extends BuildWrapper {
             return map;
         }
         
-        @Override
-        public void buildEnvVars(Map<String, String> env) {
-            env.putAll(getEnvMap(env));
-	}
-        
-        @Override
         public boolean tearDown(AbstractBuild build, BuildListener listener)
                 throws IOException, InterruptedException {
             if (deleteKeychainsAfterBuild) {

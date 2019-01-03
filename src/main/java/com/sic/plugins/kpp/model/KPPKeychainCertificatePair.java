@@ -33,6 +33,8 @@ import hudson.util.ListBoxModel;
 import java.io.File;
 import java.io.Serializable;
 import java.util.List;
+
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -202,6 +204,7 @@ public class KPPKeychainCertificatePair extends AbstractDescribableImpl<KPPKeych
     /**
      * Descriptor of the {@link KPPKeychainCertificatePair}.
      */
+    @Symbol("signingPair")
     @Extension
     public static class DescriptorImpl extends Descriptor<KPPKeychainCertificatePair> {
         
@@ -235,7 +238,7 @@ public class KPPKeychainCertificatePair extends AbstractDescribableImpl<KPPKeych
             }
             return m;
         }
-        
+
         @Override
         public String getDisplayName() {
             return Messages.KPPKeychainCertificatePair_DisplayName();

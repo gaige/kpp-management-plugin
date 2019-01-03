@@ -30,10 +30,11 @@ import hudson.DescriptorExtensionList;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.model.Descriptor;
-import hudson.model.Hudson;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import jenkins.model.Jenkins;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang.StringUtils;
 
@@ -107,20 +108,20 @@ public abstract class KPPBaseProvisioningProfilesProvider extends KPPBaseProvide
      * @return all the registered {@link KPPKeychain} descriptors.
      */
     public static DescriptorExtensionList<KPPProvisioningProfile, Descriptor<KPPProvisioningProfile>> allProvisioningProfileDescriptors() {
-        return Hudson.getInstance().getDescriptorList(KPPProvisioningProfile.class);
+        return Jenkins.getInstance().getDescriptorList(KPPProvisioningProfile.class);
     }
     
     /**
      * All regsitered {@link KPPBaseProvisioningProfilesProvider}s.
      */
     public static ExtensionList<KPPBaseProvisioningProfilesProvider> all() {
-        return Hudson.getInstance().getExtensionList(KPPBaseProvisioningProfilesProvider.class);
+        return Jenkins.getInstance().getExtensionList(KPPBaseProvisioningProfilesProvider.class);
     }
     
     /**
      * Call this method to update provisioning profiles from save action. The provisioning profiles from save action are merged into current provisioning profiles list. 
      * Then this list is sychnronized with the upload folder.
-     * @param provisioningProfilesAfterSave 
+     * @param provisioningProfilesFromSave list of profiles from the save operation
      */
     public void updateProvisioningProfilesFromSave(List<KPPProvisioningProfile>provisioningProfilesFromSave) {
         List<KPPProvisioningProfile> ppsCurrent = new ArrayList<KPPProvisioningProfile>(getProvisioningProfiles());

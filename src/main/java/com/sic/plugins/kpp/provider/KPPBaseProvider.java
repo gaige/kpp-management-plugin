@@ -25,7 +25,6 @@
 package com.sic.plugins.kpp.provider;
 
 import hudson.XmlFile;
-import hudson.model.Hudson;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -36,6 +35,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import jenkins.model.Jenkins;
 import org.apache.commons.fileupload.FileItem;
 
 /**
@@ -45,7 +46,7 @@ import org.apache.commons.fileupload.FileItem;
 public abstract class KPPBaseProvider {
     
     protected final static Logger LOGGER = Logger.getLogger(KPPBaseProvider.class.getName());
-    private final static String DEFAULT_UPLOAD_DIRECTORY_PATH = Hudson.getInstance().getRootDir() + File.separator + "kpp_upload";
+    private final static String DEFAULT_UPLOAD_DIRECTORY_PATH = Jenkins.getInstance().getRootDir() + File.separator + "kpp_upload";
     private final String defaultConfigXmlFileName;
     
     /**
@@ -91,7 +92,7 @@ public abstract class KPPBaseProvider {
     
     /**
      * Get the default Upload Directory Path for Keychains and Provisioning Profiles files.
-     * @return 
+     * @return directory path
      */
     public String getUploadDirectoryPath() {
         return DEFAULT_UPLOAD_DIRECTORY_PATH;
@@ -99,7 +100,7 @@ public abstract class KPPBaseProvider {
     
     /**
      * Store uploaded file inside upload directory.
-     * @param fileItemToUpload
+     * @param fileItemToUpload item to upload
      * @throws FileNotFoundException
      * @throws IOException 
      */
@@ -113,10 +114,10 @@ public abstract class KPPBaseProvider {
     
     /**
      * Get the provider config file.
-     * @return 
+     * @return provider config file
      */
     public XmlFile getConfigXmlFile() {
-        return new XmlFile(new File(Hudson.getInstance().getRootDir(), getConfigXmlFileName()));
+        return new XmlFile(new File(Jenkins.getInstance().getRootDir(), getConfigXmlFileName()));
     }
     
     /**

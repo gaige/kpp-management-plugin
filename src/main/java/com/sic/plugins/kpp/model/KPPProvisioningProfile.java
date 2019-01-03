@@ -29,11 +29,13 @@ import com.sic.plugins.kpp.provider.KPPProvisioningProfilesProvider;
 import hudson.Extension;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
-import hudson.model.Hudson;
 import hudson.util.ListBoxModel;
 import java.io.File;
 import java.io.Serializable;
 import java.util.List;
+
+import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -154,13 +156,14 @@ public class KPPProvisioningProfile implements Describable<KPPProvisioningProfil
      * @return descriptor
      */
     public Descriptor<KPPProvisioningProfile> getDescriptor() {
-        Descriptor ds = Hudson.getInstance().getDescriptorOrDie(getClass());
+        Descriptor ds = Jenkins.getInstance().getDescriptorOrDie(getClass());
         return ds;
     }
     
     /**
      * Descriptor for an {@link KPPProvisioningProfile}.
      */
+    @Symbol("provisioningProfile")
     @Extension
     public static class DescriptorImpl extends Descriptor<KPPProvisioningProfile> {
 

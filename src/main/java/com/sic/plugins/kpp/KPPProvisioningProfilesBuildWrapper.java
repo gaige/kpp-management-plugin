@@ -120,25 +120,25 @@ public class KPPProvisioningProfilesBuildWrapper extends SimpleBuildWrapper {
      */
     private void copyProvisioningProfiles(FilePath workspacePath) throws IOException, InterruptedException {
         
-        Jenkins jenkins=Jenkins.getInstance();
+        Jenkins jenkins=Jenkins.get();
         FilePath jenkinsRoot = jenkins.getRootPath();
         VirtualChannel channel;
-        String toProvisioningProfilesDirectoryPath = null;
-        
+
         Computer buildOn= workspacePath.toComputer();
         Computer masterComputer = jenkins.toComputer();
 
         boolean isMaster = false;
         channel = workspacePath.getChannel();
+        String toProvisioningProfilesDirectoryPath = null;
         if (buildOn == masterComputer) {
             // build on master
             toProvisioningProfilesDirectoryPath = KPPProvisioningProfilesProvider.getInstance().getProvisioningProfilesPath();
             isMaster = true;
         } else {
             // build on slave
-            KPPNodeProperty nodeProperty = KPPNodeProperty.getCurrentNodeProperties();
+            KPPNodeProperty nodeProperty = KPPNodeProperty.getCurrentNodeProperties(workspacePath);
             if (nodeProperty != null) {
-                toProvisioningProfilesDirectoryPath = KPPNodeProperty.getCurrentNodeProperties().getProvisioningProfilesPath();
+                toProvisioningProfilesDirectoryPath = nodeProperty.getProvisioningProfilesPath();
             }
         }
         

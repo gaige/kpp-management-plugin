@@ -3,23 +3,30 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.609.1</version>
+        <version>4.2</version>
         <relativePath />
     </parent>
+    <properties>
+        <jenkins.version>2.164.1</jenkins.version>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <java.level>8</java.level>
+    </properties>
+
 
     <groupId>sic.software</groupId>
     <name>Keychains and Provisioning Profiles Management</name>
     <description>This Jenkins plugin integrates a keychains and provisioning profiles managment for iOS and OSX projects build on a mac.</description>
     <artifactId>kpp-management-plugin</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.1.1-SNAPSHOT</version>
     <packaging>hpi</packaging>
+
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Keychains+and+Provisioning+Profiles+Plugin</url>
     <scm>
         <connection>scm:git:ssh://github.com/jenkinsci/kpp-management-plugin.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/jenkinsci/kpp-management-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/kpp-management-plugin</url>
     </scm>
-    
     <licenses>
         <license>
             <name>The MIT license</name>
@@ -33,6 +40,11 @@
             <id>michaelb</id>
             <name>Michael Bär</name>
             <email>michael.baer@sic-software.com</email>
+        </developer>
+        <developer>
+            <id>gaige</id>
+            <name>Gaige Paulsen</name>
+            <email>gaige@cluetrust.com</email>
         </developer>
   </developers>
 
@@ -52,12 +64,12 @@
     </pluginRepositories>
     
     <build> 
-     <plugins> 
-       <plugin> 
-         <groupId>org.jenkins-ci.tools</groupId> 
-         <artifactId>maven-hpi-plugin</artifactId> 
-         <version>1.120</version>
-       </plugin> 
+     <plugins>
+       <plugin>
+         <groupId>org.jenkins-ci.tools</groupId>
+         <artifactId>maven-hpi-plugin</artifactId>
+         <version>2.1</version>
+       </plugin>
      </plugins> 
    </build>
     <!-- https://mvnrepository.com/artifact/org.jenkins-ci.plugins/structs -->
@@ -65,7 +77,7 @@
        <dependency>
            <groupId>org.jenkins-ci.plugins</groupId>
            <artifactId>structs</artifactId>
-           <version>1.1</version>
+           <version>1.20</version>
        </dependency>
 
    </dependencies>

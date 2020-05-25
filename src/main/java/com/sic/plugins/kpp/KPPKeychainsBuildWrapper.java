@@ -118,7 +118,7 @@ public class KPPKeychainsBuildWrapper extends SimpleBuildWrapper {
      * @throws InterruptedException 
      */
     private void copyKeychainsToWorkspace(FilePath workspacePath) throws IOException, InterruptedException {
-        Jenkins jenkins=Jenkins.getInstance();
+        Jenkins jenkins=Jenkins.get();
         FilePath jenkinsRoot = jenkins.getRootPath();
 
         if (copiedKeychains == null) {

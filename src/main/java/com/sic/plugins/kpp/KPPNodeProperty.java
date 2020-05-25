@@ -25,7 +25,7 @@
 package com.sic.plugins.kpp;
 
 import hudson.Extension;
-import hudson.model.Computer;
+import hudson.FilePath;
 import hudson.model.Node;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.NodePropertyDescriptor;
@@ -40,7 +40,7 @@ public class KPPNodeProperty extends NodeProperty<Node>{
     private String provisioningProfilesPath;
     
     /**
-     * Construcrot
+     * Constructor
      * @param provisioningProfilesPath path to the directory where the provisioning profiles should be saved on the node.
      */
     @DataBoundConstructor
@@ -60,10 +60,10 @@ public class KPPNodeProperty extends NodeProperty<Node>{
      * Get the {@link KPPNodeProperty}.
      * @return node property
      */
-    public static KPPNodeProperty getCurrentNodeProperties() {
-        KPPNodeProperty property = Computer.currentComputer().getNode().getNodeProperties().get(KPPNodeProperty.class);
+    public static KPPNodeProperty getCurrentNodeProperties(FilePath workspace) {
+        KPPNodeProperty property = workspace.toComputer().getNode().getNodeProperties().get(KPPNodeProperty.class);
         if(property == null) {
-            property = Jenkins.getInstance().getGlobalNodeProperties().get(KPPNodeProperty.class);
+            property = Jenkins.get().getGlobalNodeProperties().get(KPPNodeProperty.class);
         }
         return property;
     }
